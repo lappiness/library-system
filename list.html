@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Library</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      color: #333;
+      min-height: 100vh;
+    }
+    .lib-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px 12px;
+    }
+    .lib-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #111;
+    }
+    .refresh-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #888;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      border-radius: 6px;
+    }
+    .refresh-btn:active { color: #333; }
+    .refresh-btn.spinning { animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stats-row {
+      display: flex;
+      align-items: center;
+      padding: 8px 16px 20px;
+    }
+    .stat-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+    .stat-num {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: #aaa;
+    }
+    .stat-divider {
+      width: 1px;
+      height: 28px;
+      background: #e8e8e8;
+      flex-shrink: 0;
+    }
+
+    .loading-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 16px;
+      gap: 12px;
+    }
+    .loading-spinner {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #e8e8e8;
+      border-top-color: #555;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    .loading-text { font-size: 12px; color: #bbb; }
+
+    .error-wrap { padding: 40px 16px; text-align: center; }
+    .error-text { font-size: 13px; color: #aaa; }
+    .retry-btn {
+      margin-top: 16px;
+      display: inline-block;
+      padding: 8px 20px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #666;
+      cursor: pointer;
+      background: none;
+    }
+
+    .shelf { margin-bottom: 32px; }
+    .shelf-label {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-left: 16px;
+    }
+    .shelf-track {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 0 16px 16px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      touch-action: pan-x;
+    }
+    .shelf-track::-webkit-scrollbar { display: none; }
+    .shelf-rail {
+      height: 2px;
+      background: linear-gradient(to right, transparent, #e0e0e0 10%, #e0e0e0 90%, transparent);
+      margin: 0 16px;
+    }
+
+    .book-card {
+      flex: 0 0 100px;
+      width: 100px;
+      scroll-snap-align: start;
+      cursor: pointer;
+    }
+    .book-cover-wrap {
+      position: relative;
+      width: 100px;
+      height: 140px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      background: #f5f5f5;
+    }
+    .book-cover-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .book-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      color: #ccc;
+      font-weight: 600;
+      background: #f5f5f5;
+    }
+    .status-dot {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1.5px solid white;
+    }
+    .status-dot.available { background: #1D9E75; }
+    .status-dot.lent      { background: #F5A623; }
+    .status-dot.overdue   { background: #E24B4A; }
+
+    .book-title {
+      font-size: 11px;
+      color: #333;
+      margin-top: 7px;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .book-author {
+      font-size: 10px;
+      color: #aaa;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .reviews-section { margin-top: 8px; padding: 0 16px 40px; }
+    .reviews-header {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .review-card {
+      border: 0.5px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .review-book-title { font-size: 12px; font-weight: 600; color: #333; margin-bottom: 4px; }
+    .review-stars { color: #F5A623; font-size: 12px; margin-bottom: 6px; }
+    .review-text { font-size: 12px; color: #666; line-height: 1.6; }
+    .review-meta { font-size: 10px; color: #bbb; margin-top: 6px; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-sheet {
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 20px 40px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-handle {
+      width: 36px;
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .modal-cover-row { display: flex; gap: 16px; margin-bottom: 16px; }
+    .modal-cover {
+      width: 72px;
+      height: 100px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      flex-shrink: 0;
+      background: #f5f5f5;
+    }
+    .modal-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .modal-info { flex: 1; min-width: 0; }
+    .modal-title { font-size: 15px; font-weight: 700; color: #111; line-height: 1.4; margin-bottom: 4px; }
+    .modal-author { font-size: 12px; color: #aaa; margin-bottom: 10px; }
+    .modal-status-pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .modal-status-pill.available { background: #e8f7f2; color: #1D9E75; }
+    .modal-status-pill.lent      { background: #fff4e0; color: #F5A623; }
+    .modal-status-pill.overdue   { background: #fdf0f0; color: #E24B4A; }
+    .modal-detail-row { display: flex; gap: 6px; align-items: flex-start; margin-top: 8px; }
+    .modal-detail-label { font-size: 11px; color: #bbb; min-width: 52px; flex-shrink: 0; padding-top: 1px; }
+    .modal-detail-value { font-size: 12px; color: #555; }
+    .modal-close-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      background: #f5f5f5;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #555;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="lib-header">
+  <span class="lib-title">Library</span>
+  <button class="refresh-btn" id="refreshBtn" onclick="reload()" aria-label="更新">↻</button>
+</div>
+
+<div class="stats-row">
+  <div class="stat-item">
+    <span class="stat-num" id="total">-</span>
+    <span class="stat-label">冊</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="available-count">-</span>
+    <span class="stat-label">在庫あり</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <span class="stat-num" id="lent-count">-</span>
+    <span class="stat-label">貸出中</span>
+  </div>
+</div>
+
+<div id="mainContent"></div>
+
+<div class="reviews-section" id="reviewsSection" style="display:none">
+  <div class="reviews-header">Reviews</div>
+  <div id="reviewsList"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div id="modalContent"></div>
+    <button class="modal-close-btn" onclick="closeModalDirect()">閉じる</button>
+  </div>
+</div>
+
+<script>
+  var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyw4zYFkXmRRtHT8M5kxwRWAn99MXgaNcFRA-DP-g77EMI2OBcx6QEmug-s-yKNKFA/exec';
+  var GENRE_ORDER = ['書籍', '漫画', '雑誌'];
+  var GENRE_LABELS = { '書籍': 'BOOKS', '漫画': 'MANGA', '雑誌': 'MAGAZINES' };
+  var allBooks = [];
+
+  /* 画像エラー時のフォールバック（グローバル関数にしてonerrorから呼ぶ） */
+  function imgFallback(img, char) {
+    var wrap = img.parentNode;
+    var dot = wrap.querySelector('.status-dot');
+    wrap.innerHTML = '<div class="book-fallback">' + char + '</div>';
+    if (dot) wrap.appendChild(dot);
+  }
+
+  function post(data) {
+    return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      });
+  }
+
+  function getStatusClass(book) {
+    if (book.status !== '在庫あり' && book.days >= 14) return 'overdue';
+    if (book.status === '在庫あり') return 'available';
+    return 'lent';
+  }
+
+  function getStatusLabel(book) {
+    var cls = getStatusClass(book);
+    if (cls === 'overdue')   return '延滞';
+    if (cls === 'available') return '在庫あり';
+    return '貸出中';
+  }
+
+  function esc(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function coverHtml(book) {
+    var ch = esc((book.title || '?').charAt(0));
+    if (!book.imageUrl) {
+      return '<div class="book-fallback">' + ch + '</div>';
+    }
+    /* onerrorはシンプルな関数呼び出しのみ。クォートのネストなし */
+    return '<img src="' + esc(book.imageUrl) + '" alt="" loading="lazy" onerror="imgFallback(this,' + "'" + ch + "'" + ')">';
+  }
+
+  function updateStats(books) {
+    var avail = books.filter(function(b) { return b.status === '在庫あり'; }).length;
+    document.getElementById('total').textContent = books.length;
+    document.getElementById('available-count').textContent = avail;
+    document.getElementById('lent-count').textContent = books.length - avail;
+  }
+
+  function buildCard(book) {
+    var cls = getStatusClass(book);
+    return '<div class="book-card" onclick="openModal(\'' + book.bookId + '\')" role="button" tabindex="0">'
+      + '<div class="book-cover-wrap">'
+      + coverHtml(book)
+      + '<div class="status-dot ' + cls + '"></div>'
+      + '</div>'
+      + '<div class="book-title">' + esc(book.title) + '</div>'
+      + '<div class="book-author">' + esc(book.author || '') + '</div>'
+      + '</div>';
+  }
+
+  function buildShelf(genre, books) {
+    var label = GENRE_LABELS[genre] || genre.toUpperCase();
+    var cards = books.map(buildCard).join('');
+    return '<div class="shelf">'
+      + '<div class="shelf-label">' + label + '</div>'
+      + '<div class="shelf-track">' + cards + '</div>'
+      + '<div class="shelf-rail"></div>'
+      + '</div>';
+  }
+
+  function renderShelves(books) {
+    var byGenre = {};
+    books.forEach(function(book) {
+      var genre = book.genre || '書籍';
+      if (!byGenre[genre]) byGenre[genre] = [];
+      byGenre[genre].push(book);
+    });
+    var ordered = GENRE_ORDER.filter(function(g) { return byGenre[g]; });
+    Object.keys(byGenre).forEach(function(g) {
+      if (GENRE_ORDER.indexOf(g) === -1) ordered.push(g);
+    });
+    document.getElementById('mainContent').innerHTML = ordered.map(function(g) {
+      return buildShelf(g, byGenre[g]);
+    }).join('');
+  }
+
+  function renderReviews(reviews) {
+    if (!reviews || reviews.length === 0) return;
+    var html = reviews.slice(0, 10).map(function(r) {
+      var s = Math.max(0, Math.min(5, r.stars || 0));
+      var stars = '★'.repeat(s) + '☆'.repeat(5 - s);
+      return '<div class="review-card">'
+        + '<div class="review-book-title">' + esc(r.bookTitle || '') + '</div>'
+        + '<div class="review-stars">' + stars + '</div>'
+        + (r.comment ? '<div class="review-text">' + esc(r.comment) + '</div>' : '')
+        + '<div class="review-meta">' + esc(r.userName || '匿名') + ' · ' + esc(r.date || '') + '</div>'
+        + '</div>';
+    }).join('');
+    document.getElementById('reviewsList').innerHTML = html;
+    document.getElementById('reviewsSection').style.display = 'block';
+  }
+
+  function openModal(bookId) {
+    var book = null;
+    for (var i = 0; i < allBooks.length; i++) {
+      if (allBooks[i].bookId === bookId) { book = allBooks[i]; break; }
+    }
+    if (!book) return;
+
+    var cls = getStatusClass(book);
+    var label = getStatusLabel(book);
+    var details = '';
+
+    if (book.status !== '在庫あり') {
+      if (book.borrowerName) {
+        details += '<div class="modal-detail-row">'
+          + '<span class="modal-detail-label">借用者</span>'
+          + '<span class="modal-detail-value">' + esc(book.borrowerName) + '</span></div>';
+      }
+      if (book.days > 0) {
+        var daysStr = book.days >= 14 ? book.days + '日（延滞中）' : book.days + '日';
+        details += '<div class="modal-detail-row">'
+          + '<span class="modal-detail-label">経過日数</span>'
+          + '<span class="modal-detail-value">' + daysStr + '</span></div>';
+      }
+    }
+    if (book.genre) {
+      details += '<div class="modal-detail-row">'
+        + '<span class="modal-detail-label">ジャンル</span>'
+        + '<span class="modal-detail-value">' + esc(book.genre) + '</span></div>';
+    }
+
+    var ch = esc((book.title || '?').charAt(0));
+    var modalCover = book.imageUrl
+      ? '<img src="' + esc(book.imageUrl) + '" alt="" onerror="imgFallback(this,' + "'" + ch + "'" + ')">'
+      : '<div class="book-fallback">' + ch + '</div>';
+
+    document.getElementById('modalContent').innerHTML =
+      '<div class="modal-cover-row">'
+      + '<div class="modal-cover">' + modalCover + '</div>'
+      + '<div class="modal-info">'
+      + '<div class="modal-title">' + esc(book.title) + '</div>'
+      + '<div class="modal-author">' + esc(book.author || '') + '</div>'
+      + '<span class="modal-status-pill ' + cls + '">' + label + '</span>'
+      + details
+      + '</div></div>';
+
+    document.getElementById('modalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(event) {
+    if (event.target === document.getElementById('modalOverlay')) closeModalDirect();
+  }
+
+  function closeModalDirect() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function showLoading() {
+    document.getElementById('mainContent').innerHTML =
+      '<div class="loading-wrap">'
+      + '<div class="loading-spinner"></div>'
+      + '<span class="loading-text">Loading...</span>'
+      + '</div>';
+  }
+
+  function showError() {
+    document.getElementById('mainContent').innerHTML =
+      '<div class="error-wrap">'
+      + '<div class="error-text">データの取得に失敗しました</div>'
+      + '<button class="retry-btn" onclick="reload()">再試行</button>'
+      + '</div>';
+  }
+
+  function loadReviews() {
+    post({ action: 'getReviews' })
+      .then(function(data) { renderReviews(data.reviews); })
+      .catch(function() {});
+  }
+
+  function reload() {
+    var btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    showLoading();
+    document.getElementById('reviewsSection').style.display = 'none';
+
+    post({ action: 'getList' })
+      .then(function(data) {
+        btn.classList.remove('spinning');
+        allBooks = (data.list || []).map(function(b) {
+          b.genre = b.genre || '書籍';
+          return b;
+        });
+        updateStats(allBooks);
+        renderShelves(allBooks);
+        loadReviews();
+      })
+      .catch(function(err) {
+        btn.classList.remove('spinning');
+        showError();
+        console.error(err);
+      });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModalDirect();
+  });
+
+  reload();
+  setInterval(reload, 300000);
+</script>
+</body>
+</html>
