@@ -5,72 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>Library</title>
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: #ffffff;
+      background: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-      color: #333;
+      color: #222;
       min-height: 100vh;
     }
+
+    /* ── ヘッダー ── */
     .lib-header {
+      padding: 28px 20px 16px;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-between;
-      padding: 20px 16px 12px;
     }
     .lib-title {
-      font-size: 20px;
+      font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.22em;
       color: #111;
+      text-transform: uppercase;
     }
     .refresh-btn {
       background: none;
       border: none;
-      font-size: 20px;
-      color: #888;
+      font-size: 18px;
+      color: #bbb;
       cursor: pointer;
-      padding: 4px 8px;
       line-height: 1;
-      border-radius: 6px;
+      padding: 4px;
     }
-    .refresh-btn:active { color: #333; }
     .refresh-btn.spinning { animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── 統計 ── */
     .stats-row {
       display: flex;
       align-items: center;
-      padding: 8px 16px 20px;
+      padding: 0 20px 24px;
+      border-bottom: 1px solid #f0f0f0;
+      margin-bottom: 8px;
     }
     .stat-item {
       flex: 1;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
+      align-items: baseline;
+      justify-content: center;
+      gap: 4px;
     }
     .stat-num {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
       color: #111;
       line-height: 1;
     }
     .stat-label {
-      font-size: 11px;
-      color: #aaa;
+      font-size: 10px;
+      color: #bbb;
+      letter-spacing: 0.06em;
     }
     .stat-divider {
       width: 1px;
-      height: 28px;
-      background: #e8e8e8;
-      flex-shrink: 0;
+      height: 20px;
+      background: #ebebeb;
     }
 
+    /* ── ローディング・エラー ── */
     .loading-wrap {
       display: flex;
       flex-direction: column;
@@ -88,7 +90,6 @@
       animation: spin 0.7s linear infinite;
     }
     .loading-text { font-size: 12px; color: #bbb; }
-
     .error-wrap { padding: 40px 16px; text-align: center; }
     .error-text { font-size: 13px; color: #aaa; }
     .retry-btn {
@@ -103,119 +104,190 @@
       background: none;
     }
 
-    .shelf { margin-bottom: 32px; }
+    /* ── 棚セクション ── */
+    .shelf { padding-top: 24px; }
     .shelf-label {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      color: #888;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: #bbb;
       text-transform: uppercase;
-      margin-bottom: 14px;
-      padding-left: 16px;
+      padding: 0 20px 12px;
+    }
+    .shelf-scene {
+      position: relative;
+      padding-bottom: 20px;
     }
     .shelf-track {
       display: flex;
       flex-direction: row;
       flex-wrap: nowrap;
-      gap: 12px;
+      gap: 10px;
       overflow-x: auto;
-      padding: 0 16px 16px;
+      padding: 8px 20px 0;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       touch-action: pan-x;
+      align-items: flex-start;
     }
     .shelf-track::-webkit-scrollbar { display: none; }
-    .shelf-rail {
-      height: 2px;
-      background: linear-gradient(to right, transparent, #e0e0e0 10%, #e0e0e0 90%, transparent);
-      margin: 0 16px;
+
+    /* 棚板 */
+    .shelf-board {
+      position: relative;
+      margin: 0 20px;
+      height: 10px;
+      background: linear-gradient(180deg, #e8e4dc 0%, #d6d1c8 100%);
+      border-radius: 0 0 3px 3px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .shelf-board::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.6);
     }
 
+    .shelf-gap { height: 28px; }
+
+    /* ── 本カード ── */
     .book-card {
-      flex: 0 0 100px;
-      width: 100px;
+      flex: 0 0 auto;
       scroll-snap-align: start;
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
+
     .book-cover-wrap {
       position: relative;
-      width: 100px;
-      height: 140px;
-      border-radius: 4px;
+      width: 88px;
+      height: 124px;
+      border-radius: 2px 4px 4px 2px;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      filter: drop-shadow(2px 6px 10px rgba(0,0,0,0.18));
+      flex-shrink: 0;
+      transition: transform 0.2s ease, filter 0.2s ease;
       background: #f5f5f5;
     }
-    .book-cover-wrap img {
-      width: 100%;
+    .book-card:active .book-cover-wrap {
+      transform: translateY(-4px) scale(1.03);
+      filter: drop-shadow(2px 12px 16px rgba(0,0,0,0.22));
+    }
+
+    /* 背表紙の立体感 */
+    .book-spine {
+      position: absolute;
+      top: 0; left: 0;
+      width: 6px;
       height: 100%;
+      background: linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0.04) 60%, transparent);
+      border-radius: 2px 0 0 2px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .book-cover-wrap img {
+      width: 88px;
+      height: 124px;
       object-fit: cover;
       display: block;
     }
+
     .book-fallback {
-      width: 100%;
-      height: 100%;
+      width: 88px;
+      height: 124px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
-      color: #ccc;
-      font-weight: 600;
-      background: #f5f5f5;
+      font-size: 26px;
+      font-weight: 700;
     }
+
+    /* フォールバック背景色 */
+    .fb-0 { background: #EEF2FF; color: #6366F1; }
+    .fb-1 { background: #FFF7ED; color: #EA580C; }
+    .fb-2 { background: #F0FDF4; color: #16A34A; }
+    .fb-3 { background: #FFF1F2; color: #E11D48; }
+    .fb-4 { background: #F0F9FF; color: #0284C7; }
+    .fb-5 { background: #FEFCE8; color: #CA8A04; }
+    .fb-6 { background: #FDF4FF; color: #A21CAF; }
+    .fb-7 { background: #F8FAFC; color: #475569; }
+
+    /* ステータスドット */
     .status-dot {
       position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 8px;
-      height: 8px;
+      top: 7px; right: 7px;
+      width: 7px; height: 7px;
       border-radius: 50%;
-      border: 1.5px solid white;
+      border: 1.5px solid rgba(255,255,255,0.9);
+      z-index: 3;
     }
-    .status-dot.available { background: #1D9E75; }
+    .status-dot.available { background: #1DB080; }
     .status-dot.lent      { background: #F5A623; }
     .status-dot.overdue   { background: #E24B4A; }
 
+    /* 貸出中・延滞は暗く */
+    .book-card.is-lent .book-cover-wrap {
+      filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.10)) brightness(0.55) saturate(0.6);
+    }
+    .book-card.is-lent .book-title { color: #bbb; }
+    .book-card.is-lent .book-author { color: #ddd; }
+    .book-card.is-lent:active .book-cover-wrap {
+      transform: none;
+      filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.10)) brightness(0.55) saturate(0.6);
+    }
+
     .book-title {
-      font-size: 11px;
-      color: #333;
-      margin-top: 7px;
+      font-size: 10px;
+      color: #444;
+      margin-top: 9px;
       line-height: 1.4;
+      text-align: center;
+      width: 88px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
     .book-author {
-      font-size: 10px;
-      color: #aaa;
+      font-size: 9px;
+      color: #bbb;
       margin-top: 2px;
+      text-align: center;
+      width: 88px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .reviews-section { margin-top: 8px; padding: 0 16px 40px; }
+    /* ── Reviews ── */
+    .reviews-section {
+      padding: 32px 20px 48px;
+      border-top: 1px solid #f0f0f0;
+    }
     .reviews-header {
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      color: #888;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: #bbb;
       text-transform: uppercase;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
     }
     .review-card {
-      border: 0.5px solid #e8e8e8;
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
+      padding: 14px 0;
+      border-bottom: 1px solid #f5f5f5;
     }
-    .review-book-title { font-size: 12px; font-weight: 600; color: #333; margin-bottom: 4px; }
-    .review-stars { color: #F5A623; font-size: 12px; margin-bottom: 6px; }
-    .review-text { font-size: 12px; color: #666; line-height: 1.6; }
-    .review-meta { font-size: 10px; color: #bbb; margin-top: 6px; }
+    .review-card:last-child { border-bottom: none; }
+    .review-book-title { font-size: 12px; font-weight: 600; color: #222; margin-bottom: 3px; }
+    .review-stars { color: #F5A623; font-size: 11px; margin-bottom: 6px; }
+    .review-text { font-size: 12px; color: #666; line-height: 1.7; }
+    .review-meta { font-size: 10px; color: #ccc; margin-top: 5px; }
 
+    /* ── モーダル ── */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -236,16 +308,14 @@
       overflow-y: auto;
     }
     .modal-handle {
-      width: 36px;
-      height: 4px;
+      width: 36px; height: 4px;
       background: #e0e0e0;
       border-radius: 2px;
       margin: 0 auto 20px;
     }
     .modal-cover-row { display: flex; gap: 16px; margin-bottom: 16px; }
     .modal-cover {
-      width: 72px;
-      height: 100px;
+      width: 72px; height: 100px;
       border-radius: 4px;
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.12);
@@ -325,13 +395,15 @@
   var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyw4zYFkXmRRtHT8M5kxwRWAn99MXgaNcFRA-DP-g77EMI2OBcx6QEmug-s-yKNKFA/exec';
   var GENRE_ORDER = ['書籍', '漫画', '雑誌'];
   var GENRE_LABELS = { '書籍': 'BOOKS', '漫画': 'MANGA', '雑誌': 'MAGAZINES' };
+  var FB_CLASSES = ['fb-0','fb-1','fb-2','fb-3','fb-4','fb-5','fb-6','fb-7'];
   var allBooks = [];
 
-  /* 画像エラー時のフォールバック（グローバル関数にしてonerrorから呼ぶ） */
-  function imgFallback(img, char) {
+  function imgFallback(img, char, fbClass) {
     var wrap = img.parentNode;
     var dot = wrap.querySelector('.status-dot');
-    wrap.innerHTML = '<div class="book-fallback">' + char + '</div>';
+    var spine = wrap.querySelector('.book-spine');
+    wrap.innerHTML = '<div class="book-fallback ' + fbClass + '">' + char + '</div>';
+    if (spine) wrap.appendChild(spine);
     if (dot) wrap.appendChild(dot);
   }
 
@@ -364,13 +436,20 @@
       .replace(/"/g, '&quot;');
   }
 
+  function getFbClass(bookId) {
+    var n = 0;
+    for (var i = 0; i < bookId.length; i++) n += bookId.charCodeAt(i);
+    return FB_CLASSES[n % FB_CLASSES.length];
+  }
+
   function coverHtml(book) {
     var ch = esc((book.title || '?').charAt(0));
+    var fb = getFbClass(book.bookId || book.title || '');
     if (!book.imageUrl) {
-      return '<div class="book-fallback">' + ch + '</div>';
+      return '<div class="book-fallback ' + fb + '">' + ch + '</div>';
     }
-    /* onerrorはシンプルな関数呼び出しのみ。クォートのネストなし */
-    return '<img src="' + esc(book.imageUrl) + '" alt="" loading="lazy" onerror="imgFallback(this,' + "'" + ch + "'" + ')">';
+    return '<img src="' + esc(book.imageUrl) + '" alt="" loading="lazy" '
+      + 'onerror="imgFallback(this,' + "'" + ch + "','" + fb + "'" + ')">';
   }
 
   function updateStats(books) {
@@ -382,9 +461,11 @@
 
   function buildCard(book) {
     var cls = getStatusClass(book);
-    return '<div class="book-card" onclick="openModal(\'' + book.bookId + '\')" role="button" tabindex="0">'
+    var isLent = cls === 'lent' || cls === 'overdue';
+    return '<div class="book-card' + (isLent ? ' is-lent' : '') + '" onclick="openModal(\'' + esc(book.bookId) + '\')" role="button" tabindex="0">'
       + '<div class="book-cover-wrap">'
       + coverHtml(book)
+      + '<div class="book-spine"></div>'
       + '<div class="status-dot ' + cls + '"></div>'
       + '</div>'
       + '<div class="book-title">' + esc(book.title) + '</div>'
@@ -397,9 +478,12 @@
     var cards = books.map(buildCard).join('');
     return '<div class="shelf">'
       + '<div class="shelf-label">' + label + '</div>'
+      + '<div class="shelf-scene">'
       + '<div class="shelf-track">' + cards + '</div>'
-      + '<div class="shelf-rail"></div>'
-      + '</div>';
+      + '<div class="shelf-board"></div>'
+      + '</div>'
+      + '</div>'
+      + '<div class="shelf-gap"></div>';
   }
 
   function renderShelves(books) {
@@ -440,35 +524,26 @@
       if (allBooks[i].bookId === bookId) { book = allBooks[i]; break; }
     }
     if (!book) return;
-
     var cls = getStatusClass(book);
     var label = getStatusLabel(book);
     var details = '';
-
     if (book.status !== '在庫あり') {
       if (book.borrowerName) {
-        details += '<div class="modal-detail-row">'
-          + '<span class="modal-detail-label">借用者</span>'
-          + '<span class="modal-detail-value">' + esc(book.borrowerName) + '</span></div>';
+        details += '<div class="modal-detail-row"><span class="modal-detail-label">借用者</span><span class="modal-detail-value">' + esc(book.borrowerName) + '</span></div>';
       }
       if (book.days > 0) {
         var daysStr = book.days >= 14 ? book.days + '日（延滞中）' : book.days + '日';
-        details += '<div class="modal-detail-row">'
-          + '<span class="modal-detail-label">経過日数</span>'
-          + '<span class="modal-detail-value">' + daysStr + '</span></div>';
+        details += '<div class="modal-detail-row"><span class="modal-detail-label">経過日数</span><span class="modal-detail-value">' + daysStr + '</span></div>';
       }
     }
     if (book.genre) {
-      details += '<div class="modal-detail-row">'
-        + '<span class="modal-detail-label">ジャンル</span>'
-        + '<span class="modal-detail-value">' + esc(book.genre) + '</span></div>';
+      details += '<div class="modal-detail-row"><span class="modal-detail-label">ジャンル</span><span class="modal-detail-value">' + esc(book.genre) + '</span></div>';
     }
-
     var ch = esc((book.title || '?').charAt(0));
+    var fb = getFbClass(book.bookId || book.title || '');
     var modalCover = book.imageUrl
-      ? '<img src="' + esc(book.imageUrl) + '" alt="" onerror="imgFallback(this,' + "'" + ch + "'" + ')">'
-      : '<div class="book-fallback">' + ch + '</div>';
-
+      ? '<img src="' + esc(book.imageUrl) + '" alt="" onerror="imgFallback(this,' + "'" + ch + "','" + fb + "'" + ')">'
+      : '<div class="book-fallback ' + fb + '">' + ch + '</div>';
     document.getElementById('modalContent').innerHTML =
       '<div class="modal-cover-row">'
       + '<div class="modal-cover">' + modalCover + '</div>'
@@ -478,7 +553,6 @@
       + '<span class="modal-status-pill ' + cls + '">' + label + '</span>'
       + details
       + '</div></div>';
-
     document.getElementById('modalOverlay').classList.add('open');
     document.body.style.overflow = 'hidden';
   }
@@ -486,7 +560,6 @@
   function closeModal(event) {
     if (event.target === document.getElementById('modalOverlay')) closeModalDirect();
   }
-
   function closeModalDirect() {
     document.getElementById('modalOverlay').classList.remove('open');
     document.body.style.overflow = '';
@@ -494,18 +567,12 @@
 
   function showLoading() {
     document.getElementById('mainContent').innerHTML =
-      '<div class="loading-wrap">'
-      + '<div class="loading-spinner"></div>'
-      + '<span class="loading-text">Loading...</span>'
-      + '</div>';
+      '<div class="loading-wrap"><div class="loading-spinner"></div><span class="loading-text">Loading...</span></div>';
   }
-
   function showError() {
     document.getElementById('mainContent').innerHTML =
-      '<div class="error-wrap">'
-      + '<div class="error-text">データの取得に失敗しました</div>'
-      + '<button class="retry-btn" onclick="reload()">再試行</button>'
-      + '</div>';
+      '<div class="error-wrap"><div class="error-text">データの取得に失敗しました</div>'
+      + '<button class="retry-btn" onclick="reload()">再試行</button></div>';
   }
 
   function loadReviews() {
@@ -519,7 +586,6 @@
     btn.classList.add('spinning');
     showLoading();
     document.getElementById('reviewsSection').style.display = 'none';
-
     post({ action: 'getList' })
       .then(function(data) {
         btn.classList.remove('spinning');
