@@ -162,6 +162,10 @@
       align-items: center;
     }
 
+    @keyframes shimmer {
+      0%   { background-position: -240px 0; }
+      100% { background-position: 240px 0; }
+    }
     .book-cover-wrap {
       position: relative;
       width: 88px;
@@ -171,7 +175,9 @@
       filter: drop-shadow(2px 6px 10px rgba(0,0,0,0.18));
       flex-shrink: 0;
       transition: transform 0.2s ease, filter 0.2s ease;
-      background: #f5f5f5;
+      background: linear-gradient(90deg, #ececec 25%, #f8f8f8 50%, #ececec 75%);
+      background-size: 480px 100%;
+      animation: shimmer 1.4s infinite linear;
     }
     .book-card:active .book-cover-wrap {
       transform: translateY(-4px) scale(1.03);
@@ -448,7 +454,7 @@
     if (!book.imageUrl) {
       return '<div class="book-fallback ' + fb + '">' + ch + '</div>';
     }
-    return '<img src="' + esc(book.imageUrl) + '" alt="" loading="lazy" '
+    return '<img src="' + esc(book.imageUrl) + '" alt="" width="88" height="124" decoding="async" '
       + 'onerror="imgFallback(this,' + "'" + ch + "','" + fb + "'" + ')">';
   }
 
@@ -576,30 +582,56 @@
   }
 
   function loadReviews() {
+    var cachedRev = null;
+    try { cachedRev = JSON.parse(localStorage.getItem('lib_reviews')); } catch(e) {}
+    if (cachedRev) renderReviews(cachedRev);
+
     post({ action: 'getReviews' })
-      .then(function(data) { renderReviews(data.reviews); })
+      .then(function(data) {
+        if (data.reviews) {
+          try { localStorage.setItem('lib_reviews', JSON.stringify(data.reviews)); } catch(e) {}
+          renderReviews(data.reviews);
+        }
+      })
       .catch(function() {});
+  }
+
+  function applyList(list) {
+    allBooks = (list || []).map(function(b) {
+      b.genre = b.genre || '書籍';
+      return b;
+    });
+    updateStats(allBooks);
+    renderShelves(allBooks);
   }
 
   function reload() {
     var btn = document.getElementById('refreshBtn');
     btn.classList.add('spinning');
-    showLoading();
-    document.getElementById('reviewsSection').style.display = 'none';
+
+    /* キャッシュがあれば即表示 */
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem('lib_list')); } catch(e) {}
+    if (cached && cached.length) {
+      applyList(cached);
+      document.getElementById('reviewsSection').style.display = 'none';
+      loadReviews();
+    } else {
+      showLoading();
+    }
+
+    /* バックグラウンドで最新データを取得 */
     post({ action: 'getList' })
       .then(function(data) {
         btn.classList.remove('spinning');
-        allBooks = (data.list || []).map(function(b) {
-          b.genre = b.genre || '書籍';
-          return b;
-        });
-        updateStats(allBooks);
-        renderShelves(allBooks);
+        try { localStorage.setItem('lib_list', JSON.stringify(data.list || [])); } catch(e) {}
+        applyList(data.list);
+        document.getElementById('reviewsSection').style.display = 'none';
         loadReviews();
       })
       .catch(function(err) {
         btn.classList.remove('spinning');
-        showError();
+        if (!cached || !cached.length) showError();
         console.error(err);
       });
   }
