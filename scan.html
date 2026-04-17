@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: #fff; border-radius: 16px; padding: 28px 24px; max-width: 360px; width: 100%; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  .book-info { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 20px; }
+  .book-cover { width: 48px; height: 64px; background: #eee; border-radius: 6px; flex-shrink: 0; overflow: hidden; }
+  .book-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .book-title { font-size: 17px; font-weight: 600; line-height: 1.4; color: #111; }
+  .book-author { font-size: 13px; color: #888; margin-top: 4px; }
+  .status-badge { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
+  .available { background: #e1f5ee; color: #085041; }
+  .lent { background: #faece7; color: #712b13; }
+  .borrower-info { font-size: 13px; color: #666; margin-bottom: 20px; background: #fafafa; padding: 10px 14px; border-radius: 10px; line-height: 1.6; }
+  .greeting { font-size: 14px; color: #555; margin-bottom: 16px; }
+  .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; transition: opacity 0.2s; }
+  .btn:active { opacity: 0.8; }
+  .btn-borrow { background: #534ab7; color: #fff; }
+  .btn-return { background: #d85a30; color: #fff; }
+  .btn-review { background: transparent; color: #666; border: 1px solid #ddd; font-weight: 400; font-size: 14px; }
+  .btn-register { background: transparent; color: #534ab7; border: 1px solid #534ab7; font-size: 14px; }
+  .stars { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
+  .star { font-size: 28px; cursor: pointer; color: #ddd; transition: color 0.15s; }
+  .star.active { color: #f5a623; }
+  textarea { width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 12px; font-size: 14px; resize: none; font-family: inherit; outline: none; }
+  textarea:focus { border-color: #534ab7; }
+  .btn-submit { background: #534ab7; color: #fff; }
+  .success { text-align: center; padding: 20px 0; }
+  .success-icon { font-size: 48px; margin-bottom: 12px; }
+  .success-text { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 6px; }
+  .success-sub { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .loading-wrap { text-align: center; padding: 40px 0; }
+  .loading-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
+  .loading-dots span { width: 8px; height: 8px; background: #534ab7; border-radius: 50%; opacity: 0.3; animation: dot 1.2s infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%,80%,100%{opacity:0.3;transform:scale(1)} 40%{opacity:1;transform:scale(1.3)} }
+  .loading-text { font-size: 13px; color: #aaa; }
+  .pin-input { width: 100%; border: 1.5px solid #534ab7; border-radius: 10px; padding: 14px; font-size: 24px; text-align: center; letter-spacing: 8px; font-family: inherit; outline: none; margin-bottom: 12px; }
+  .error { font-size: 13px; color: #d85a30; text-align: center; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="card" id="main">
+  <div class="loading-wrap">
+    <div class="loading-dots"><span></span><span></span><span></span></div>
+    <div class="loading-text">読み込み中...</div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyw4zYFkXmRRtHT8M5kxwRWAn99MXgaNcFRA-DP-g77EMI2OBcx6QEmug-s-yKNKFA/exec';
+const GITHUB_URL = 'https://lappiness.github.io/library-system/';
+
+/* GASテンプレートの代わりにURLパラメーターから取得 */
+const _params = new URLSearchParams(location.search);
+const BOOK_ID = _params.get('book_id') || '';
+const URL_USER_ID = _params.get('user_id') || '';
+
+function showSafariGuide(isLine) {
+  const guideHtml = isLine ? `
+    <div style="text-align:left;margin-bottom:24px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <div style="background:#534ab7;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div>
+        <div style="font-size:13px;color:#444;line-height:1.6">画面右下の <strong>「･･･」</strong> または <strong>「🧭」</strong> をタップ</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <div style="background:#534ab7;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div>
+        <div style="font-size:13px;color:#444;line-height:1.6"><strong>「ブラウザで開く」</strong> をタップ</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="background:#534ab7;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">3</div>
+        <div style="font-size:13px;color:#444;line-height:1.6">Safariが開いたら完了です</div>
+      </div>
+    </div>
+  ` : `
+    <div style="text-align:left;margin-bottom:24px">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">
+        <div style="background:#534ab7;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">1</div>
+        <div style="font-size:13px;color:#444;line-height:1.6">画面下の <strong>「🧭」</strong> マークをタップ</div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="background:#534ab7;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">2</div>
+        <div style="font-size:13px;color:#444;line-height:1.6">Safariが開いたら完了です</div>
+      </div>
+    </div>
+  `;
+  document.body.innerHTML = `
+    <div style="min-height:100vh;background:#f5f5f5;display:flex;align-items:center;justify-content:center;padding:24px;font-family:-apple-system,sans-serif;">
+      <div style="background:#fff;border-radius:20px;padding:32px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+        <div style="font-size:44px;margin-bottom:14px">📖</div>
+        <div style="font-size:17px;font-weight:700;color:#111;margin-bottom:8px;line-height:1.5">Safariで開いてください</div>
+        <div style="font-size:13px;color:#888;margin-bottom:24px;line-height:1.7">
+          このブラウザでは正しく動作しません。<br>Safariで開き直してください。
+        </div>
+        ${guideHtml}
+        <div style="background:#f0efff;border-radius:12px;padding:12px 14px;font-size:12px;color:#534ab7;line-height:1.6;text-align:left">
+          💡 iPhoneの標準カメラでQRを読み取るとSafariで直接開けます
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function checkBrowser() {
+  const ua = navigator.userAgent || '';
+  const uaLower = ua.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/i.test(ua);
+  const isAndroid = uaLower.indexOf('android') > -1;
+  if (isAndroid) {
+    const isChromeNative = uaLower.indexOf('chrome') > -1 && uaLower.indexOf('wv') === -1;
+    if (!isChromeNative) {
+      location.href = 'intent://' + location.href.replace(/https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+      return true;
+    }
+    return false;
+  }
+  if (isIOS) {
+    const isLine = uaLower.indexOf('line') > -1;
+    const isOtherInApp = uaLower.indexOf('fbav') > -1 || uaLower.indexOf('fban') > -1
+      || uaLower.indexOf('instagram') > -1 || uaLower.indexOf('crios') > -1
+      || uaLower.indexOf('fxios') > -1 || uaLower.indexOf('edgios') > -1 || uaLower.indexOf('gsa') > -1;
+    if (isLine || isOtherInApp) { showSafariGuide(isLine); return true; }
+  }
+  return false;
+}
+
+function getUserId() {
+  if (URL_USER_ID && URL_USER_ID !== '') {
+    try { localStorage.setItem('library_user_id', URL_USER_ID); } catch(e) {}
+    return URL_USER_ID;
+  }
+  try { return localStorage.getItem('library_user_id') || ''; } catch(e) { return ''; }
+}
+
+let userId = getUserId();
+let userName = '';
+let currentBook = null;
+let selectedStars = 0;
+
+async function post(data) {
+  const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(data) });
+  return res.json();
+}
+
+async function init() {
+  if (checkBrowser()) return;
+  if (!BOOK_ID) {
+    document.getElementById('main').innerHTML = '<div class="loading-wrap"><div class="loading-text">本のIDが見つかりません</div></div>';
+    return;
+  }
+
+  const book = await post({ action: 'getBook', bookId: BOOK_ID });
+  if (book.error) {
+    document.getElementById('main').innerHTML = '<div class="loading-wrap"><div class="loading-text">本が見つかりません</div></div>';
+    return;
+  }
+  currentBook = book;
+
+  if (userId) {
+    const r = await post({ action: 'loginPin', pin: userId });
+    if (r.name) {
+      userName = r.name;
+      userId = r.userId;
+    } else {
+      userId = '';
+    }
+  }
+
+  if (!userId) {
+    showPinOrRegister(book);
+  } else {
+    renderMain(book, userName);
+  }
+}
+
+function showPinOrRegister(book) {
+  const isAvailable = book.status === '在庫あり';
+  const coverHtml = book.imageUrl
+    ? `<div class="book-cover"><img src="${book.imageUrl}" alt="表紙"></div>`
+    : `<div class="book-cover"></div>`;
+
+  document.getElementById('main').innerHTML = `
+    <div class="book-info">
+      ${coverHtml}
+      <div>
+        <div class="book-title">${book.title}</div>
+        <div class="book-author">${book.author}</div>
+      </div>
+    </div>
+    <span class="status-badge ${isAvailable ? 'available' : 'lent'}">
+      ${isAvailable ? '在庫あり' : '貸出中'}
+    </span>
+    <div style="margin-bottom:8px;font-size:14px;color:#555">PINを入力してください</div>
+    <input type="number" class="pin-input" id="pin-input" placeholder="0000" maxlength="4"
+      oninput="if(this.value.length>4)this.value=this.value.slice(0,4)"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="error" id="pin-error" style="display:none">PINが正しくありません</div>
+    <button class="btn btn-borrow" onclick="doLogin()">決定</button>
+    <button class="btn btn-register" onclick="goRegister()">はじめての方はこちら</button>
+  `;
+  setTimeout(() => { const i = document.getElementById('pin-input'); if (i) i.focus(); }, 100);
+}
+
+async function doLogin() {
+  const pin = document.getElementById('pin-input').value.trim();
+  if (pin.length !== 4) return;
+  document.getElementById('pin-error').style.display = 'none';
+  document.getElementById('main').innerHTML = `<div class="loading-wrap"><div class="loading-dots"><span></span><span></span><span></span></div><div class="loading-text">確認中...</div></div>`;
+  const r = await post({ action: 'loginPin', pin: pin });
+  if (r.error) {
+    showPinOrRegister(currentBook);
+    setTimeout(() => { const e = document.getElementById('pin-error'); if (e) e.style.display = 'block'; }, 50);
+    return;
+  }
+  userId = r.userId;
+  userName = r.name;
+  try { localStorage.setItem('library_user_id', pin); } catch(e) {}
+  renderMain(currentBook, userName);
+}
+
+function renderMain(book, uName) {
+  const isAvailable = book.status === '在庫あり';
+  const isMyBook = book.borrowerId === userId && userId !== '';
+  const coverHtml = book.imageUrl
+    ? `<div class="book-cover"><img src="${book.imageUrl}" alt="表紙"></div>`
+    : `<div class="book-cover"></div>`;
+
+  let html = `
+    <div class="book-info">
+      ${coverHtml}
+      <div>
+        <div class="book-title">${book.title}</div>
+        <div class="book-author">${book.author}</div>
+      </div>
+    </div>
+    <span class="status-badge ${isAvailable ? 'available' : 'lent'}">
+      ${isAvailable ? '在庫あり' : '貸出中'}
+    </span>
+  `;
+  if (!isAvailable && !isMyBook) {
+    html += `<div class="borrower-info">${book.borrowerName || '誰か'} が借りています（${book.days}日目）</div>`;
+  }
+  if (isAvailable) {
+    html += `<div class="greeting">こんにちは、${uName} さん</div><button class="btn btn-borrow" onclick="doBorrow()">この本を借りる</button>`;
+  } else if (isMyBook) {
+    html += `<div class="greeting">あなたが借りています（${book.days}日目）</div><button class="btn btn-return" onclick="doReturn()">返却する</button>`;
+  } else {
+    html += `<div class="greeting">こんにちは、${uName} さん</div>`;
+  }
+  document.getElementById('main').innerHTML = html;
+}
+
+async function doBorrow() {
+  document.getElementById('main').innerHTML = `<div class="loading-wrap"><div class="loading-dots"><span></span><span></span><span></span></div><div class="loading-text">処理中...</div></div>`;
+  await post({ action: 'borrow', bookId: BOOK_ID, userId: userId });
+  document.getElementById('main').innerHTML = `<div class="success"><div class="success-icon">✓</div><div class="success-text">借りました！</div><div class="success-sub">ゆっくり読んでください。<br>返却は同じQRから。</div></div>`;
+}
+
+async function doReturn() {
+  document.getElementById('main').innerHTML = `<div class="loading-wrap"><div class="loading-dots"><span></span><span></span><span></span></div><div class="loading-text">処理中...</div></div>`;
+  await post({ action: 'return', bookId: BOOK_ID, userId: userId });
+  document.getElementById('main').innerHTML = `
+    <div class="success"><div class="success-icon">✓</div><div class="success-text">返却完了！</div><div class="success-sub">ありがとうございました。</div></div>
+    <div style="margin-top:20px"><button class="btn btn-review" onclick="showReviewForm()">感想を残す（任意）</button></div>
+  `;
+}
+
+function showReviewForm() {
+  document.getElementById('main').innerHTML += `
+    <div style="margin-top:16px;border-top:1px solid #eee;padding-top:16px">
+      <div class="stars" id="stars">
+        <span class="star" onclick="setStar(1)">★</span><span class="star" onclick="setStar(2)">★</span>
+        <span class="star" onclick="setStar(3)">★</span><span class="star" onclick="setStar(4)">★</span>
+        <span class="star" onclick="setStar(5)">★</span>
+      </div>
+      <textarea id="comment" rows="4" placeholder="ひとことでOKです。次の人への贈り物になります。"></textarea>
+      <button class="btn btn-submit" onclick="submitReview()" style="margin-top:10px">感想を送る</button>
+    </div>
+  `;
+}
+
+function setStar(n) {
+  selectedStars = n;
+  document.querySelectorAll('.star').forEach((s, i) => s.classList.toggle('active', i < n));
+}
+
+async function submitReview() {
+  const comment = document.getElementById('comment').value.trim();
+  await post({ action: 'review', bookId: BOOK_ID, userId: userId, stars: selectedStars, comment: comment });
+  document.getElementById('main').innerHTML = `<div class="success"><div class="success-icon">✓</div><div class="success-text">感想を送りました！</div><div class="success-sub">次の人への贈り物になります。ありがとう。</div></div>`;
+}
+
+function goRegister() {
+  window.open(GITHUB_URL + 'register.html?book_id=' + encodeURIComponent(BOOK_ID), '_blank');
+}
+
+init();
+</script>
+</body>
+</html>
