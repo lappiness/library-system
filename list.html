@@ -133,21 +133,10 @@
     }
     .shelf-track::-webkit-scrollbar { display: none; }
 
-    /* 棚板 */
-    .shelf-board {
-      position: relative;
+    .shelf-divider {
       margin: 0 20px;
-      height: 10px;
-      background: linear-gradient(180deg, #e8e4dc 0%, #d6d1c8 100%);
-      border-radius: 0 0 3px 3px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06);
-    }
-    .shelf-board::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
       height: 1px;
-      background: rgba(255,255,255,0.6);
+      background: #efefef;
     }
 
     .shelf-gap { height: 28px; }
@@ -486,9 +475,9 @@
       + '<div class="shelf-label">' + label + '</div>'
       + '<div class="shelf-scene">'
       + '<div class="shelf-track">' + cards + '</div>'
-      + '<div class="shelf-board"></div>'
       + '</div>'
       + '</div>'
+      + '<div class="shelf-divider"></div>'
       + '<div class="shelf-gap"></div>';
   }
 
