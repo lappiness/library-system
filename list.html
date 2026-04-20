@@ -212,19 +212,6 @@
     .fb-6 { background: #FDF4FF; color: #A21CAF; }
     .fb-7 { background: #F8FAFC; color: #475569; }
 
-    /* ステータスドット */
-    .status-dot {
-      position: absolute;
-      top: 7px; right: 7px;
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,0.9);
-      z-index: 3;
-    }
-    .status-dot.available { background: #1DB080; }
-    .status-dot.lent      { background: #F5A623; }
-    .status-dot.overdue   { background: #E24B4A; }
-
     /* 貸出中・延滞は暗く */
     .book-card.is-lent .book-cover-wrap {
       filter: drop-shadow(2px 4px 8px rgba(0,0,0,0.10)) brightness(0.55) saturate(0.6);
@@ -395,11 +382,9 @@
 
   function imgFallback(img, char, fbClass) {
     var wrap = img.parentNode;
-    var dot = wrap.querySelector('.status-dot');
     var spine = wrap.querySelector('.book-spine');
     wrap.innerHTML = '<div class="book-fallback ' + fbClass + '">' + char + '</div>';
     if (spine) wrap.appendChild(spine);
-    if (dot) wrap.appendChild(dot);
   }
 
   function post(data) {
@@ -461,7 +446,6 @@
       + '<div class="book-cover-wrap">'
       + coverHtml(book)
       + '<div class="book-spine"></div>'
-      + '<div class="status-dot ' + cls + '"></div>'
       + '</div>'
       + '<div class="book-title">' + esc(book.title) + '</div>'
       + '<div class="book-author">' + esc(book.author || '') + '</div>'
